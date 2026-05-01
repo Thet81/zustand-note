@@ -1,8 +1,10 @@
 // Note.jsx
+import {useNoteActions} from '../store'
 
 const Note = ({note})=> {
+	const {toggleImportanceOf} = useNoteActions()
 	return (
-		<li>{note.content}</li>
+		<li onClick={()=>toggleImportanceOf(note.id)}>{note.content}</li>
 	)
 }
 
