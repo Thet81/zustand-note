@@ -19,7 +19,7 @@ const initialNotes = [
   ]
 
 const useNoteStore = create((set,get) => ({
-	notes : initialNotes,
+	notes : [],
 	filter : 'ALL',
 	actions : {
 		add : async note => {
