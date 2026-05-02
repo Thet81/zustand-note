@@ -1,65 +1,37 @@
 // store.test.js
 
-import {beforeEach, describe, expect, it} from 'vitest'
-import useCounterStore,{useCounter, useCounterControls} from './counterStore'
+import {describe, it, expect, beforeEach, vi} from 'vitest'
 import {renderHook, act} from '@testing-library/react'
-// import useCounterStore, {useCounter, useCounterControls} from './store'
+
+vi.mock('./services/notes',()=> ({
+	default : {
+		getAll : vi.fn(),
+		createNew : vi.fn(),
+		update : vi.fn(),
+	}
+}))
+
+import noteService from './services/notes'
+import useNoteStore, {useNotes, useFilter, useNoteActions} from './store.js'
 
 beforeEach(()=> {
-	useCounterStore.setState({counter : 0})
+	useNoteStore.setState({notes : [], filter : ''})
+	vi.clearAllMocks()
 })
 
-describe('counter store',()=> {
-	it('initial state is 0', ()=> {
-		expect(useCounterStore.getState().counter).toBe(0)
-	})
+describe('useNoteActions',()=> {
+	it('initialize loads notes from services', async ()=>{
+		const mockNotes = [{id : 1, content : 'Test', important : false}]
+		noteService.getAll.mockResolvedValue(mockNotes)
 
-	it('decrement decreases counter by 1', ()=> {
-		useCounterStore.getState().actions.decrement()
-		expect(useCounterStore.getState().counter).toBe(-1);
-	})
+		const {result} = renderHook(()=> useNoteActions())
 
-	it('zero resets counter to zero',()=> {
-		useCounterStore.getState().actions.increment();
-		useCounterStore.getState().actions.increment();
-		useCounterStore.getState().actions.zero();
-		expect(useCounterStore.getState().counter).toBe(0)
-	})
-})
-
-describe('counter hooks',()=> {
-	it ('usecounter returns initial value of 0',()=> {
-		const {result} = renderHook (()=> useCounter())
-		expect(result.current).toBe(0)
-	})
-
-	it('increment updates counter', ()=> {
-		const {result : counter} = renderHook(()=> useCounter())
-		const {result : controls} = renderHook(()=> useCounterControls())
-
-		act(()=> controls.current.increment())
-		expect(counter.current).toBe(1)
-	})
-
-	it('decrement updates counter',()=> {
-		const {result : counter} = renderHook(()=> useCounter())
-		const {result : controls} = renderHook(()=> useCounterControls())
-
-		act(()=> controls.current.decrement())
-
-		expect(counter.current).toBe(-1)
-	})
-
-	it('zero reset counter',()=> {
-		const {result : counter} = renderHook(()=> useCounter())
-		const {result : controls}  = renderHook(()=> useCounterControls())
-
-		act(()=> {
-			controls.current.increment()
-			controls.current.increment()
-			controls.current.zero()
+		await act(async ()=> {
+			await result.current.initialize()
 		})
 
-		expect(counter.current).toBe(0)
+		const {result : noteResult} = renderHook(()=> useNotes())
+
+		expect(noteResult.current).toEqual(mockNotes)
 	})
 })
